@@ -1,1268 +1,1090 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Clock</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>iOS Clock Ultra</title>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@100;200;300;400;500;600;700&display=swap');
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root{
+  --bg:#000000;
+  --card:#1c1c1e;
+  --card2:#2c2c2e;
+  --line:rgba(255,255,255,.08);
 
-  :root {
-    --ios-orange: #FF9F0A;
-    --ios-red: #FF453A;
-    --ios-green: #30D158;
-    --ios-blue: #0A84FF;
-    --ios-gray: #636366;
-    --ios-gray2: #48484A;
-    --ios-gray3: #3A3A3C;
-    --ios-gray4: #2C2C2E;
-    --ios-gray5: #1C1C1E;
-    --ios-gray6: #111111;
-    --ios-label: #FFFFFF;
-    --ios-secondary: #8E8E93;
-    --ios-tertiary: #48484A;
-    --ios-separator: rgba(255,255,255,0.1);
-    --nav-h: 83px;
-    --safe-bottom: 34px;
-  }
+  --white:#fff;
+  --secondary:#8e8e93;
 
-  html, body {
-    width: 100%; height: 100%;
-    background: #000;
-    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-    overflow: hidden;
-    color: #fff;
-    -webkit-font-smoothing: antialiased;
-  }
+  --orange:#ff9f0a;
+  --green:#30d158;
+  --red:#ff453a;
 
-  /* ── APP SHELL ── */
-  #app {
-    width: 100%; height: 100%;
-    display: flex; flex-direction: column;
-    overflow: hidden;
-    position: relative;
-  }
+  --navH:108px;
+}
 
-  /* ── PAGES CONTAINER ── */
-  #pages-wrap {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  color:#fff;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    sans-serif;
 
-  #pages {
-    display: flex;
-    width: 400%;
-    height: 100%;
-    transform: translateX(0%);
-    transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
-    will-change: transform;
-  }
+  -webkit-font-smoothing:antialiased;
+}
 
-  .page {
-    width: 25%;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    background: #000;
-    padding-bottom: calc(var(--nav-h) + 10px);
-  }
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.03), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(255,255,255,.04), transparent 40%);
+  pointer-events:none;
+}
 
-  .page::-webkit-scrollbar { display: none; }
+#app{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  background:#000;
+}
 
-  /* ── PAGE TITLES ── */
-  .page-header {
-    padding: 60px 20px 10px;
-    display: flex; align-items: flex-end; justify-content: space-between;
-  }
+.pages{
+  width:400%;
+  height:100%;
+  display:flex;
+  transition:transform .65s cubic-bezier(.32,.72,0,1);
+  will-change:transform;
+}
 
-  .page-title {
-    font-size: 34px; font-weight: 700;
-    letter-spacing: -0.5px;
-    color: #fff;
-  }
+.page{
+  width:25%;
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-bottom:160px;
+  background:#000;
+}
 
-  .page-action {
-    font-size: 17px; font-weight: 400;
-    color: var(--ios-orange);
-    cursor: pointer;
-    padding: 4px 0;
-  }
+.page::-webkit-scrollbar{
+  display:none;
+}
 
-  /* ── WORLD CLOCK PAGE ── */
-  .clock-list { padding: 0 20px; }
+/* HEADER */
 
-  .clock-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 0.5px solid var(--ios-separator);
-    position: relative;
-  }
-  .clock-item:last-child { border-bottom: none; }
+.header{
+  padding:
+    calc(env(safe-area-inset-top) + 18px)
+    22px
+    18px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+}
 
-  .clock-left {}
-  .clock-region { font-size: 13px; color: var(--ios-secondary); font-weight: 400; margin-bottom: 1px; }
-  .clock-city { font-size: 22px; font-weight: 300; color: #fff; letter-spacing: -0.2px; }
-  .clock-offset { font-size: 13px; color: var(--ios-secondary); margin-top: 1px; }
+.title{
+  font-size:38px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:-1.6px;
+}
 
-  .clock-right { text-align: right; }
-  .clock-time {
-    font-size: 52px; font-weight: 100; letter-spacing: -2px;
-    color: #fff; line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .clock-ampm { font-size: 20px; font-weight: 300; margin-left: 2px; }
+.add-btn{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:none;
+  color:var(--orange);
+  background:rgba(255,255,255,.08);
+  font-size:28px;
+  font-weight:200;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
 
-  .clock-day {
-    font-size: 13px; color: var(--ios-secondary);
-    margin-top: 2px;
-    text-align: right;
-  }
+/* WORLD CLOCK */
 
-  /* ── ALARM PAGE ── */
-  .alarm-list { padding: 0 20px; }
+.clock-list{
+  padding:0 20px;
+}
 
-  .alarm-item {
-    padding: 14px 0;
-    border-bottom: 0.5px solid var(--ios-separator);
-  }
-  .alarm-item:last-child { border-bottom: none; }
+.clock-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 0;
+  border-bottom:1px solid var(--line);
+}
 
-  .alarm-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-  .alarm-label-text { font-size: 15px; color: var(--ios-secondary); }
-  .alarm-time-row { display: flex; align-items: baseline; gap: 4px; }
-  .alarm-time { font-size: 52px; font-weight: 100; letter-spacing: -2px; color: #fff; font-variant-numeric: tabular-nums; }
-  .alarm-ampm { font-size: 20px; font-weight: 300; color: #fff; }
-  .alarm-days { font-size: 13px; color: var(--ios-secondary); margin-top: 2px; }
+.clock-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
 
-  /* iOS Toggle */
-  .ios-toggle {
-    width: 51px; height: 31px;
-    background: var(--ios-gray3);
-    border-radius: 16px;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.25s ease;
-    flex-shrink: 0;
-  }
-  .ios-toggle.on { background: var(--ios-green); }
-  .ios-toggle::after {
-    content: '';
-    position: absolute;
-    top: 2px; left: 2px;
-    width: 27px; height: 27px;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .ios-toggle.on::after { transform: translateX(20px); }
+.analog{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.2);
+  position:relative;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.09), transparent 60%);
+}
 
-  /* Dim alarm when off */
-  .alarm-item.off .alarm-time,
-  .alarm-item.off .alarm-ampm { color: var(--ios-gray); }
+.hand{
+  position:absolute;
+  left:50%;
+  bottom:50%;
+  transform-origin:bottom center;
+  border-radius:20px;
+}
 
-  /* ── STOPWATCH PAGE ── */
-  #sw-display {
-    text-align: center;
-    padding: 30px 20px 0;
-  }
+.hand.hour{
+  width:2px;
+  height:11px;
+  margin-left:-1px;
+  background:#fff;
+}
 
-  #sw-time {
-    font-size: 86px; font-weight: 100;
-    letter-spacing: -4px;
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-  }
+.hand.min{
+  width:1.5px;
+  height:15px;
+  margin-left:-0.75px;
+  background:#fff;
+}
 
-  #sw-ms {
-    display: inline-block;
-    font-size: 52px; font-weight: 100;
-    letter-spacing: -2px;
-  }
+.center-dot{
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#fff;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+}
 
-  .sw-buttons {
-    display: flex; justify-content: space-around; align-items: center;
-    padding: 28px 40px;
-  }
+.region{
+  font-size:13px;
+  color:var(--secondary);
+  margin-bottom:3px;
+}
 
-  .sw-btn {
-    width: 74px; height: 74px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 500;
-    cursor: pointer;
-    border: none; outline: none;
-    transition: transform 0.1s ease, opacity 0.1s ease;
-    -webkit-user-select: none;
-  }
-  .sw-btn:active { transform: scale(0.93); opacity: 0.85; }
+.city{
+  font-size:24px;
+  font-weight:300;
+  letter-spacing:-.5px;
+}
 
-  .sw-btn-green { background: #1C3A22; color: var(--ios-green); }
-  .sw-btn-green.running { background: #3A1C1C; color: var(--ios-red); }
-  .sw-btn-gray { background: var(--ios-gray3); color: #fff; }
-  .sw-btn-orange { background: #2C2209; color: var(--ios-orange); }
+.offset{
+  margin-top:4px;
+  font-size:13px;
+  color:var(--secondary);
+}
 
-  /* Lap list */
-  .lap-list { padding: 0 20px; }
-  .lap-header {
-    display: flex; justify-content: space-between;
-    padding: 4px 0 8px;
-    font-size: 13px; color: var(--ios-secondary);
-    border-bottom: 0.5px solid var(--ios-separator);
-  }
-  .lap-item {
-    display: flex; justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 0.5px solid var(--ios-separator);
-    font-size: 17px; font-variant-numeric: tabular-nums;
-  }
-  .lap-item.fastest { color: var(--ios-green); }
-  .lap-item.slowest { color: var(--ios-red); }
-  .lap-item span:last-child { font-weight: 400; }
+.clock-time{
+  font-size:58px;
+  font-weight:100;
+  letter-spacing:-4px;
+  line-height:.95;
+  font-variant-numeric:tabular-nums;
+}
 
-  /* ── TIMER PAGE ── */
-  .timer-arc-wrap {
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px 0 10px;
-    position: relative;
-  }
+.ampm{
+  font-size:22px;
+  font-weight:300;
+  margin-left:4px;
+}
 
-  #timer-svg {
-    width: 260px; height: 260px;
-    transform: rotate(-90deg);
-  }
+.day{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--secondary);
+  text-align:right;
+}
 
-  .arc-track {
-    fill: none; stroke: var(--ios-gray3);
-    stroke-width: 8;
-  }
+/* ALARM */
 
-  .arc-progress {
-    fill: none;
-    stroke: url(#timerGrad);
-    stroke-width: 8;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.05s linear;
-  }
+.alarm-list{
+  padding:0 20px;
+}
 
-  #timer-display {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-  }
+.alarm{
+  padding:18px 0;
+  border-bottom:1px solid var(--line);
+}
 
-  #timer-time {
-    font-size: 68px; font-weight: 100;
-    letter-spacing: -3px;
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-  }
+.alarm-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+}
 
-  .timer-buttons {
-    display: flex; justify-content: space-around; align-items: center;
-    padding: 10px 40px 20px;
-  }
+.alarm-label{
+  font-size:15px;
+  color:var(--secondary);
+}
 
-  .timer-btn {
-    width: 74px; height: 74px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; font-weight: 500;
-    cursor: pointer; border: none; outline: none;
-    transition: transform 0.1s ease, opacity 0.1s ease;
-  }
-  .timer-btn:active { transform: scale(0.93); opacity: 0.85; }
-  .timer-btn-gray { background: var(--ios-gray3); color: #fff; }
-  .timer-btn-green { background: #1C3A22; color: var(--ios-green); }
-  .timer-btn-red { background: #3A1C1C; color: var(--ios-red); }
+.alarm-time{
+  font-size:62px;
+  font-weight:100;
+  letter-spacing:-4px;
+  line-height:1;
+}
 
-  /* Picker Wheel */
-  .timer-picker {
-    display: flex; align-items: center; justify-content: center;
-    gap: 0; padding: 0 20px;
-    height: 200px;
-    position: relative;
-    overflow: hidden;
-  }
+.alarm-days{
+  margin-top:5px;
+  font-size:13px;
+  color:var(--secondary);
+}
 
-  .picker-col {
-    flex: 1;
-    height: 200px;
-    overflow: hidden;
-    position: relative;
-    cursor: grab;
-  }
+/* TOGGLE */
 
-  .picker-col:active { cursor: grabbing; }
+.toggle{
+  width:52px;
+  height:32px;
+  border-radius:50px;
+  background:#39393d;
+  position:relative;
+  transition:.25s;
+}
 
-  .picker-items {
-    display: flex; flex-direction: column;
-    align-items: center;
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: transform;
-  }
+.toggle::after{
+  content:"";
+  position:absolute;
+  top:2px;
+  left:2px;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#fff;
+  transition:.28s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:
+    0 3px 10px rgba(0,0,0,.4),
+    inset 0 1px 1px rgba(255,255,255,.4);
+}
 
-  .picker-item {
-    height: 40px; width: 100%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 300;
-    color: var(--ios-secondary);
-    font-variant-numeric: tabular-nums;
-    transition: color 0.15s, font-size 0.15s, font-weight 0.15s;
-    flex-shrink: 0;
-  }
+.toggle.active{
+  background:var(--green);
+}
 
-  .picker-item.selected {
-    color: #fff; font-size: 24px; font-weight: 400;
-  }
+.toggle.active::after{
+  transform:translateX(20px);
+}
 
-  .picker-overlay-top,
-  .picker-overlay-bottom {
-    position: absolute; left: 0; right: 0;
-    height: 80px;
-    pointer-events: none;
-    z-index: 2;
-  }
-  .picker-overlay-top {
-    top: 0;
-    background: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0) 100%);
-  }
-  .picker-overlay-bottom {
-    bottom: 0;
-    background: linear-gradient(to top, #000 0%, rgba(0,0,0,0) 100%);
-  }
+/* STOPWATCH */
 
-  .picker-selector {
-    position: absolute;
-    top: 50%; transform: translateY(-50%);
-    left: 16px; right: 16px;
-    height: 40px;
-    background: rgba(255,255,255,0.07);
-    border-radius: 8px;
-    pointer-events: none;
-    z-index: 1;
-  }
+.stopwatch-display{
+  padding-top:10px;
+  text-align:center;
+}
 
-  .picker-label {
-    font-size: 22px; font-weight: 300;
-    color: var(--ios-secondary);
-    padding: 0 4px;
-    align-self: center;
-    position: relative;
-    z-index: 3;
-    flex-shrink: 0;
-  }
+.stopwatch-time{
+  font-size:92px;
+  font-weight:100;
+  letter-spacing:-6px;
+  font-variant-numeric:tabular-nums;
+}
 
-  /* When timer running, hide picker show arc */
-  .timer-running .timer-picker { display: none; }
-  .timer-stopped .timer-arc-wrap { display: none; }
+.controls{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:28px 42px;
+}
 
-  /* ── LIQUID GLASS NAV BAR ── */
-  #nav-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    height: var(--nav-h);
-    z-index: 1000;
-    padding: 0 8px;
-    padding-bottom: var(--safe-bottom);
-    display: flex; align-items: flex-start;
-    /* Liquid Glass layering */
-    background: transparent;
-  }
+.circle-btn{
+  width:84px;
+  height:84px;
+  border-radius:50%;
+  border:none;
+  color:#fff;
+  font-size:18px;
+  position:relative;
+  overflow:hidden;
+}
 
-  #nav-glass {
-    position: absolute;
-    inset: 8px 8px calc(var(--safe-bottom) - 4px);
-    border-radius: 24px;
-    overflow: hidden;
-    /* Multi-layer glass stack */
-    background:
-      /* Grain noise texture */
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E") center/200px,
-      linear-gradient(
-        180deg,
-        rgba(255,255,255,0.18) 0%,
-        rgba(255,255,255,0.08) 40%,
-        rgba(0,0,0,0.12) 100%
-      );
-    backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
-    -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.1);
-    border: 0.5px solid rgba(255,255,255,0.25);
-    box-shadow:
-      0 0 0 0.5px rgba(0,0,0,0.3),
-      inset 0 1px 0 rgba(255,255,255,0.35),
-      inset 0 -1px 0 rgba(0,0,0,0.15),
-      0 8px 32px rgba(0,0,0,0.5),
-      0 2px 8px rgba(0,0,0,0.3);
-  }
+.circle-btn::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
 
-  /* Top highlight edge */
-  #nav-glass::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 12px; right: 12px;
-    height: 1px;
-    background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(255,255,255,0.6) 20%,
-      rgba(255,255,255,0.8) 50%,
-      rgba(255,255,255,0.6) 80%,
-      transparent 100%
+.circle-btn span{
+  position:relative;
+  z-index:2;
+}
+
+.gray{
+  background:rgba(255,255,255,.08);
+}
+
+.green{
+  background:rgba(48,209,88,.18);
+  color:var(--green);
+}
+
+.red{
+  background:rgba(255,69,58,.18);
+  color:var(--red);
+}
+
+/* TIMER */
+
+.timer-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding-top:20px;
+  position:relative;
+}
+
+svg{
+  width:320px;
+  height:320px;
+  transform:rotate(-90deg);
+}
+
+.track{
+  fill:none;
+  stroke:rgba(255,255,255,.08);
+  stroke-width:10;
+}
+
+.progress{
+  fill:none;
+  stroke:url(#grad);
+  stroke-width:10;
+  stroke-linecap:round;
+  stroke-dasharray:879;
+  stroke-dashoffset:0;
+}
+
+.timer-center{
+  position:absolute;
+  text-align:center;
+}
+
+.timer-time{
+  font-size:74px;
+  font-weight:100;
+  letter-spacing:-4px;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ULTRA IOS 26 LIQUID TAB BAR */
+
+.tabbar-wrap{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:150px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  padding-bottom:max(14px, env(safe-area-inset-bottom));
+  pointer-events:none;
+}
+
+.tabbar{
+  width:calc(100% - 22px);
+  max-width:760px;
+  height:88px;
+  border-radius:44px;
+  position:relative;
+  pointer-events:auto;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.20) 0%,
+      rgba(255,255,255,.10) 38%,
+      rgba(255,255,255,.05) 100%
     );
-    border-radius: 50%;
-  }
 
-  /* Subtle inner glow */
-  #nav-glass::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.12) 0%, transparent 60%);
-    border-radius: 24px;
-  }
+  backdrop-filter:
+    blur(40px)
+    saturate(220%)
+    brightness(1.15);
 
-  #nav-items {
-    position: relative; z-index: 2;
-    display: flex; width: 100%;
-    height: 100%;
-    align-items: flex-start;
-    padding: 8px 0 0;
-  }
+  -webkit-backdrop-filter:
+    blur(40px)
+    saturate(220%)
+    brightness(1.15);
 
-  .nav-item {
-    flex: 1;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: flex-start;
-    gap: 3px;
-    cursor: pointer;
-    padding: 4px 2px 0;
-    position: relative;
-    transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
-  }
+  border:
+    1px solid rgba(255,255,255,.20);
 
-  .nav-item:active { transform: scale(0.88); }
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.18) inset,
+    0 -1px 0 rgba(0,0,0,.35) inset,
+    0 20px 40px rgba(0,0,0,.55),
+    0 4px 14px rgba(0,0,0,.5);
 
-  .nav-icon-wrap {
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-  }
+  overflow:hidden;
+}
 
-  .nav-icon {
-    width: 24px; height: 24px;
-    transition: all 0.28s cubic-bezier(0.34,1.56,0.64,1);
-  }
+.tabbar::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
 
-  .nav-label {
-    font-size: 10px; font-weight: 500;
-    letter-spacing: 0.2px;
-    color: var(--ios-secondary);
-    transition: color 0.2s ease;
-    text-align: center;
-  }
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,.22), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(255,255,255,.18), transparent 32%),
+    radial-gradient(circle at 50% 120%, rgba(255,255,255,.08), transparent 50%);
 
-  /* Active bubble */
-  .nav-item.active .nav-label { color: var(--ios-orange); }
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
 
-  .nav-bubble {
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%,
-      rgba(255,255,255,0.35) 0%,
-      rgba(255,200,100,0.15) 40%,
-      rgba(255,159,10,0.08) 70%,
-      transparent 100%
+.tabbar::after{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:43px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.14),
+      rgba(255,255,255,.02)
     );
-    backdrop-filter: blur(8px) brightness(1.2);
-    -webkit-backdrop-filter: blur(8px) brightness(1.2);
-    border: 0.5px solid rgba(255,255,255,0.4);
-    box-shadow:
-      0 2px 12px rgba(255,159,10,0.3),
-      inset 0 1px 2px rgba(255,255,255,0.5),
-      inset 0 -1px 2px rgba(0,0,0,0.1);
-    opacity: 0;
-    transform: scale(0.6);
-    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
-    pointer-events: none;
-  }
 
-  .nav-item.active .nav-bubble {
-    opacity: 1;
-    transform: scale(1);
-  }
+  pointer-events:none;
+}
 
-  .nav-item.active .nav-icon path,
-  .nav-item.active .nav-icon circle,
-  .nav-item.active .nav-icon rect {
-    fill: var(--ios-orange) !important;
-  }
+.tabs{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  position:relative;
+  z-index:5;
+}
 
-  .nav-item.active .nav-icon .stroke-icon {
-    stroke: var(--ios-orange) !important;
-  }
+.active-pill{
+  position:absolute;
+  width:86px;
+  height:72px;
+  left:10px;
+  top:8px;
+  border-radius:36px;
 
-  /* SVG icons */
-  .nav-icon svg { width: 24px; height: 24px; }
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.42),
+      rgba(255,255,255,.14)
+    );
 
-  /* ── SECTION DIVIDERS ── */
-  .section-divider {
-    height: 0.5px;
-    background: var(--ios-separator);
-    margin: 0 20px;
-  }
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
 
-  /* ── ADD CITY / FAB ── */
-  .fab {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: var(--ios-gray3);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    font-size: 20px; color: #fff; font-weight: 300;
-  }
+  border:1px solid rgba(255,255,255,.34);
 
-  /* ── EMPTY STATE ── */
-  .empty { color: var(--ios-secondary); text-align: center; padding: 40px 20px; font-size: 17px; }
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.5),
+    inset 0 -1px 2px rgba(0,0,0,.12),
+    0 8px 18px rgba(0,0,0,.28),
+    0 0 18px rgba(255,255,255,.08);
 
-  /* ── SCROLLBAR NONE ── */
-  * { scrollbar-width: none; }
+  transition:
+    transform .65s cubic-bezier(.22,1,.36,1),
+    width .4s;
 
-  /* ── TOAST ── */
-  #toast {
-    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: rgba(50,50,52,0.95);
-    backdrop-filter: blur(20px);
-    color: #fff; padding: 10px 20px; border-radius: 20px;
-    font-size: 15px; opacity: 0; transition: all 0.3s ease;
-    pointer-events: none; white-space: nowrap; z-index: 9999;
-  }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  overflow:hidden;
+}
 
-  /* ── TIMER SOUND RIPPLE ── */
-  .ripple {
-    position: absolute; border-radius: 50%;
-    background: rgba(255,159,10,0.2);
-    animation: rippleOut 0.6s ease-out forwards;
-    pointer-events: none;
-  }
-  @keyframes rippleOut {
-    from { transform: scale(0); opacity: 1; }
-    to { transform: scale(4); opacity: 0; }
-  }
+.active-pill::before{
+  content:"";
+  position:absolute;
+  inset:0;
 
-  /* Analog clock face for world clock */
-  .analog-clock {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    border: 1.5px solid var(--ios-secondary);
-    position: relative;
-    flex-shrink: 0;
-    margin-right: 12px;
-  }
-  .analog-hand {
-    position: absolute; bottom: 50%; left: 50%;
-    transform-origin: bottom center;
-    border-radius: 2px;
-    background: #fff;
-  }
-  .analog-hour { width: 1.5px; height: 9px; margin-left: -0.75px; }
-  .analog-min { width: 1.5px; height: 12px; margin-left: -0.75px; }
-  .analog-dot {
-    position: absolute; top: 50%; left: 50%;
-    width: 3px; height: 3px;
-    background: #fff; border-radius: 50%;
-    transform: translate(-50%, -50%);
-  }
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.65), transparent 30%),
+    radial-gradient(circle at 70% 80%, rgba(255,255,255,.08), transparent 45%);
 
-  /* past midnight text */
-  .tomorrow { color: var(--ios-orange); }
-  .yesterday { color: var(--ios-secondary); }
+  opacity:.9;
+}
 
-  /* Picker hidden when running */
-  .picker-hidden { display: none !important; }
+.tab{
+  width:25%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  position:relative;
+  z-index:10;
+  cursor:pointer;
+}
+
+.tab svg{
+  width:27px;
+  height:27px;
+  transform:none;
+}
+
+.tab svg *{
+  transition:.3s;
+}
+
+.tab span{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.15px;
+  color:#8e8e93;
+  transition:.3s;
+}
+
+.tab.active span{
+  color:#fff;
+}
+
+.tab.active svg *{
+  stroke:#fff !important;
+  fill:#fff !important;
+}
+
+.tab:active{
+  transform:scale(.94);
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:140px;
+  transform:translateX(-50%) translateY(10px);
+  background:rgba(28,28,30,.82);
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
+  padding:12px 20px;
+  border-radius:22px;
+  opacity:0;
+  transition:.35s;
+  pointer-events:none;
+  font-size:15px;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
 </style>
 </head>
+
 <body>
 
 <div id="app">
 
-  <!-- PAGES WRAPPER -->
-  <div id="pages-wrap">
-    <div id="pages">
+  <div class="pages" id="pages">
 
-      <!-- ══ PAGE 0: WORLD CLOCK ══ -->
-      <div class="page" id="page-world">
-        <div class="page-header">
-          <div class="page-title">World Clock</div>
-          <div class="page-action fab" id="add-city-btn" onclick="showToast('Add City coming soon')">+</div>
-        </div>
-        <div class="clock-list" id="clock-list"></div>
+    <!-- WORLD -->
+    <section class="page">
+
+      <div class="header">
+        <div class="title">World Clock</div>
+        <button class="add-btn">+</button>
       </div>
 
-      <!-- ══ PAGE 1: ALARM ══ -->
-      <div class="page" id="page-alarm">
-        <div class="page-header">
-          <div class="page-title">Alarm</div>
-          <div class="page-action fab" onclick="showToast('Add Alarm coming soon')">+</div>
-        </div>
-        <div class="alarm-list" id="alarm-list"></div>
+      <div class="clock-list" id="worldList"></div>
+
+    </section>
+
+    <!-- ALARM -->
+    <section class="page">
+
+      <div class="header">
+        <div class="title">Alarm</div>
+        <button class="add-btn">+</button>
       </div>
 
-      <!-- ══ PAGE 2: STOPWATCH ══ -->
-      <div class="page" id="page-sw">
-        <div class="page-header" style="padding-bottom:0">
-          <div class="page-title">Stopwatch</div>
+      <div class="alarm-list">
+
+        <div class="alarm">
+          <div class="alarm-top">
+            <div class="alarm-label">Wake Up</div>
+            <div class="toggle active"></div>
+          </div>
+
+          <div class="alarm-time">
+            6:30 <span style="font-size:26px">AM</span>
+          </div>
+
+          <div class="alarm-days">Every Day</div>
         </div>
-        <div id="sw-display">
-          <div id="sw-time">00<span style="font-size:52px;font-weight:100;letter-spacing:-1px">:</span>00<span id="sw-ms">.00</span></div>
+
+        <div class="alarm">
+          <div class="alarm-top">
+            <div class="alarm-label">Gym</div>
+            <div class="toggle"></div>
+          </div>
+
+          <div class="alarm-time">
+            8:00 <span style="font-size:26px">AM</span>
+          </div>
+
+          <div class="alarm-days">Weekdays</div>
         </div>
-        <div class="sw-buttons">
-          <button class="sw-btn sw-btn-gray" id="sw-lap" onclick="swLap()">Lap</button>
-          <button class="sw-btn sw-btn-green" id="sw-start" onclick="swToggle()">Start</button>
-        </div>
-        <div class="lap-list" id="lap-list">
-          <div class="lap-header"><span>Lap</span><span>Time</span></div>
+
+      </div>
+
+    </section>
+
+    <!-- STOPWATCH -->
+    <section class="page">
+
+      <div class="header">
+        <div class="title">Stopwatch</div>
+      </div>
+
+      <div class="stopwatch-display">
+        <div class="stopwatch-time" id="sw">
+          00:00.00
         </div>
       </div>
 
-      <!-- ══ PAGE 3: TIMER ══ -->
-      <div class="page" id="page-timer">
-        <div class="page-header" style="padding-bottom:0">
-          <div class="page-title">Timer</div>
-        </div>
+      <div class="controls">
+        <button class="circle-btn gray">
+          <span>Lap</span>
+        </button>
 
-        <!-- Arc display (shown when running) -->
-        <div class="timer-arc-wrap" id="timer-arc-wrap">
-          <svg id="timer-svg" viewBox="0 0 260 260">
-            <defs>
-              <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#FF9F0A"/>
-                <stop offset="100%" stop-color="#FFD60A"/>
-              </linearGradient>
-              <filter id="arcGlow">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            <circle class="arc-track" cx="130" cy="130" r="118"/>
-            <circle class="arc-progress" id="arc-progress" cx="130" cy="130" r="118"
-              stroke-dasharray="741.42" stroke-dashoffset="0" filter="url(#arcGlow)"/>
-          </svg>
-          <div id="timer-display">
-            <div id="timer-time">00:00</div>
+        <button class="circle-btn green" id="swBtn">
+          <span>Start</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- TIMER -->
+    <section class="page">
+
+      <div class="header">
+        <div class="title">Timer</div>
+      </div>
+
+      <div class="timer-wrap">
+
+        <svg viewBox="0 0 320 320">
+          <defs>
+            <linearGradient id="grad">
+              <stop offset="0%" stop-color="#ff9f0a"/>
+              <stop offset="100%" stop-color="#ffd60a"/>
+            </linearGradient>
+          </defs>
+
+          <circle class="track" cx="160" cy="160" r="140"></circle>
+
+          <circle
+            class="progress"
+            id="prog"
+            cx="160"
+            cy="160"
+            r="140"
+          ></circle>
+        </svg>
+
+        <div class="timer-center">
+          <div class="timer-time" id="timerText">
+            15:00
           </div>
         </div>
 
-        <!-- Picker (shown when stopped) -->
-        <div class="timer-picker" id="timer-picker">
-          <div class="picker-selector"></div>
-          <div class="picker-overlay-top"></div>
-          <div class="picker-overlay-bottom"></div>
-          <div class="picker-col" id="picker-hr" data-unit="hr"></div>
-          <div class="picker-label">hr</div>
-          <div class="picker-col" id="picker-min" data-unit="min"></div>
-          <div class="picker-label">min</div>
-          <div class="picker-col" id="picker-sec" data-unit="sec"></div>
-          <div class="picker-label">sec</div>
-        </div>
-
-        <div class="timer-buttons">
-          <button class="timer-btn timer-btn-gray" id="timer-cancel" onclick="timerCancel()">Cancel</button>
-          <button class="timer-btn timer-btn-green" id="timer-start" onclick="timerToggle()">Start</button>
-        </div>
-
-        <div style="padding:16px 20px">
-          <div style="font-size:17px;font-weight:600;color:#fff;margin-bottom:12px">When Timer Ends</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--ios-gray4);border-radius:12px;cursor:pointer" onclick="showToast('Radar (Default)')">
-            <span style="font-size:17px;color:var(--ios-secondary)">Radar</span>
-            <span style="color:var(--ios-secondary);font-size:16px">›</span>
-          </div>
-        </div>
       </div>
 
-    </div><!-- /pages -->
-  </div><!-- /pages-wrap -->
+      <div class="controls">
+        <button class="circle-btn gray">
+          <span>Cancel</span>
+        </button>
 
-  <!-- ══ LIQUID GLASS NAV BAR ══ -->
-  <div id="nav-bar">
-    <div id="nav-glass"></div>
-    <div id="nav-items">
-
-      <div class="nav-item active" data-tab="0" onclick="switchTab(0)">
-        <div class="nav-icon-wrap">
-          <div class="nav-bubble"></div>
-          <div class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="9.5" stroke="#8E8E93" stroke-width="1.5" fill="none" class="stroke-icon"/>
-              <path d="M12 6.5V12L15.5 14" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-            </svg>
-          </div>
-        </div>
-        <div class="nav-label">World Clock</div>
+        <button class="circle-btn green">
+          <span>Start</span>
+        </button>
       </div>
 
-      <div class="nav-item" data-tab="1" onclick="switchTab(1)">
-        <div class="nav-icon-wrap">
-          <div class="nav-bubble"></div>
-          <div class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" stroke="#8E8E93" stroke-width="1.5" fill="none" class="stroke-icon"/>
-              <path d="M12 6v6l3 3" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-              <path d="M7 2.5L5 5M17 2.5L19 5" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-            </svg>
-          </div>
-        </div>
-        <div class="nav-label">Alarm</div>
-      </div>
+    </section>
 
-      <div class="nav-item" data-tab="2" onclick="switchTab(2)">
-        <div class="nav-icon-wrap">
-          <div class="nav-bubble"></div>
-          <div class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="13" r="8.5" stroke="#8E8E93" stroke-width="1.5" fill="none" class="stroke-icon"/>
-              <path d="M12 9v4l2.5 2.5" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-              <path d="M9 2h6M12 2v2" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-              <path d="M19.5 6.5L21 5" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-            </svg>
-          </div>
-        </div>
-        <div class="nav-label">Stopwatch</div>
-      </div>
-
-      <div class="nav-item" data-tab="3" onclick="switchTab(3)">
-        <div class="nav-icon-wrap">
-          <div class="nav-bubble"></div>
-          <div class="nav-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="13" r="8.5" stroke="#8E8E93" stroke-width="1.5" fill="none" class="stroke-icon"/>
-              <path d="M12 8v5" stroke="#8E8E93" stroke-width="2" stroke-linecap="round" class="stroke-icon"/>
-              <circle cx="12" cy="13" r="1.2" fill="#8E8E93" class="stroke-icon"/>
-              <path d="M10 2h4" stroke="#8E8E93" stroke-width="1.5" stroke-linecap="round" class="stroke-icon"/>
-            </svg>
-          </div>
-        </div>
-        <div class="nav-label">Timer</div>
-      </div>
-
-    </div>
   </div>
 
-</div><!-- /app -->
+  <!-- IOS 26 LIQUID GLASS TAB BAR -->
 
-<div id="toast"></div>
+  <div class="tabbar-wrap">
+
+    <div class="tabbar">
+
+      <div class="active-pill" id="pill"></div>
+
+      <div class="tabs">
+
+        <div class="tab active" data-index="0">
+
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9.5" stroke="#8e8e93" stroke-width="1.8"/>
+            <path d="M12 7v5l3 2" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+
+          <span>World Clock</span>
+
+        </div>
+
+        <div class="tab" data-index="1">
+
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="13" r="8.5" stroke="#8e8e93" stroke-width="1.8"/>
+            <path d="M12 9v4l2 2" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M7 3L5 5" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M17 3l2 2" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+
+          <span>Alarm</span>
+
+        </div>
+
+        <div class="tab" data-index="2">
+
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="13" r="8.5" stroke="#8e8e93" stroke-width="1.8"/>
+            <path d="M12 9v4l2.5 2.5" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M9 2h6" stroke="#8e8e93" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+
+          <span>Stopwatch</span>
+
+        </div>
+
+        <div class="tab" data-index="3">
+
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="13" r="8.5" stroke="#8e8e93" stroke-width="1.8"/>
+            <path d="M12 8v5" stroke="#8e8e93" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="12" cy="13" r="1.5" fill="#8e8e93"/>
+          </svg>
+
+          <span>Timer</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast">
+    iOS Liquid Glass
+  </div>
+
+</div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   NAVIGATION
-═══════════════════════════════════════════════ */
-let currentTab = 0;
+/* WORLD CLOCK */
 
-function switchTab(idx) {
-  if (idx === currentTab) return;
-
-  document.querySelectorAll('.nav-item').forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-  });
-
-  const pages = document.getElementById('pages');
-  pages.style.transform = `translateX(-${idx * 25}%)`;
-  currentTab = idx;
-}
-
-/* ═══════════════════════════════════════════════
-   WORLD CLOCK
-═══════════════════════════════════════════════ */
-const CITIES = [
-  { city: 'New York', region: 'United States', tz: 'America/New_York' },
-  { city: 'London', region: 'United Kingdom', tz: 'Europe/London' },
-  { city: 'Tokyo', region: 'Japan', tz: 'Asia/Tokyo' },
-  { city: 'Sydney', region: 'Australia', tz: 'Australia/Sydney' },
-  { city: 'Paris', region: 'France', tz: 'Europe/Paris' },
-  { city: 'Dubai', region: 'UAE', tz: 'Asia/Dubai' },
-  { city: 'Los Angeles', region: 'United States', tz: 'America/Los_Angeles' },
+const cities = [
+  {
+    city:"New York",
+    region:"United States",
+    tz:"America/New_York"
+  },
+  {
+    city:"London",
+    region:"United Kingdom",
+    tz:"Europe/London"
+  },
+  {
+    city:"Tokyo",
+    region:"Japan",
+    tz:"Asia/Tokyo"
+  },
+  {
+    city:"Paris",
+    region:"France",
+    tz:"Europe/Paris"
+  },
+  {
+    city:"Dubai",
+    region:"UAE",
+    tz:"Asia/Dubai"
+  }
 ];
 
-function getOffsetLabel(tz) {
-  const now = new Date();
-  const local = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-  const here = new Date(now.toLocaleString('en-US'));
-  const diff = Math.round((local - here) / 60000);
-  const absH = Math.abs(Math.floor(diff / 60));
-  const absM = Math.abs(diff % 60);
-  const sign = diff >= 0 ? '+' : '-';
-  if (absM === 0) return `${sign}${absH}hr`;
-  return `${sign}${absH}hr ${absM}min`;
-}
+const worldList = document.getElementById("worldList");
 
-function getDayLabel(tz) {
-  const now = new Date();
-  const local = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-  const here = new Date(now.toLocaleString('en-US'));
-  const localDay = local.toLocaleDateString('en-US', { weekday: 'short', timeZone: tz });
-  const hereDay = here.toLocaleDateString('en-US', { weekday: 'short' });
-  const localDate = local.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: tz });
+function buildWorld(){
 
-  const diffDays = Math.round((new Date(local.toDateString()) - new Date(here.toDateString())) / 86400000);
-  if (diffDays === 0) return localDay + ', ' + localDate;
-  if (diffDays === 1) return 'Tomorrow, ' + localDate;
-  if (diffDays === -1) return 'Yesterday, ' + localDate;
-  return localDay + ', ' + localDate;
-}
+  worldList.innerHTML = cities.map((c,i)=>`
+  
+  <div class="clock-item">
 
-function buildClockList() {
-  const list = document.getElementById('clock-list');
-  list.innerHTML = CITIES.map((c, i) => {
-    const offset = getOffsetLabel(c.tz);
-    return `
-    <div class="clock-item" id="clock-${i}">
-      <div style="display:flex;align-items:center">
-        <div class="analog-clock" id="analog-${i}">
-          <div class="analog-hand analog-hour" id="ah-${i}"></div>
-          <div class="analog-hand analog-min" id="am-${i}"></div>
-          <div class="analog-dot"></div>
-        </div>
-        <div class="clock-left">
-          <div class="clock-region">${c.region}</div>
-          <div class="clock-city">${c.city}</div>
-          <div class="clock-offset">${offset}</div>
-        </div>
+    <div class="clock-left">
+
+      <div class="analog">
+        <div class="hand hour" id="h${i}"></div>
+        <div class="hand min" id="m${i}"></div>
+        <div class="center-dot"></div>
       </div>
-      <div class="clock-right">
-        <div class="clock-time" id="ct-${i}">--<span class="clock-ampm" id="cap-${i}"></span></div>
-        <div class="clock-day" id="cd-${i}"></div>
+
+      <div>
+        <div class="region">${c.region}</div>
+        <div class="city">${c.city}</div>
+        <div class="offset">${offset(c.tz)}</div>
       </div>
-    </div>`;
-  }).join('');
-}
 
-function updateWorldClocks() {
-  CITIES.forEach((c, i) => {
-    const now = new Date();
-    const opts = { timeZone: c.tz, hour: 'numeric', minute: '2-digit', hour12: true };
-    const parts = new Intl.DateTimeFormat('en-US', { ...opts, second: '2-digit' }).formatToParts(now);
-    let h = '', m = '', s = '', ampm = '';
-    parts.forEach(p => {
-      if (p.type === 'hour') h = p.value.padStart(2, '0');
-      if (p.type === 'minute') m = p.value;
-      if (p.type === 'second') s = p.value;
-      if (p.type === 'dayPeriod') ampm = p.value;
-    });
-
-    const ctEl = document.getElementById(`ct-${i}`);
-    const capEl = document.getElementById(`cap-${i}`);
-    const cdEl = document.getElementById(`cd-${i}`);
-    if (ctEl) {
-      ctEl.childNodes[0].textContent = h + ':' + m;
-      capEl.textContent = ' ' + ampm;
-    }
-    if (cdEl) cdEl.textContent = getDayLabel(c.tz);
-
-    // Analog hands
-    const hN = parseInt(h) % 12 + parseInt(m) / 60 + parseInt(s) / 3600;
-    const mN = parseInt(m) + parseInt(s) / 60;
-    const ahEl = document.getElementById(`ah-${i}`);
-    const amEl = document.getElementById(`am-${i}`);
-    if (ahEl) ahEl.style.transform = `rotate(${hN * 30}deg)`;
-    if (amEl) amEl.style.transform = `rotate(${mN * 6}deg)`;
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   ALARMS
-═══════════════════════════════════════════════ */
-const ALARMS = [
-  { time: '6:00', ampm: 'AM', label: 'Wake Up', days: 'Every Day', on: true },
-  { time: '7:30', ampm: 'AM', label: 'Work', days: 'Weekdays', on: true },
-  { time: '8:00', ampm: 'AM', label: 'Weekend', days: 'Sat, Sun', on: false },
-  { time: '10:00', ampm: 'PM', label: 'Sleep Reminder', days: 'Every Day', on: true },
-];
-
-function buildAlarmList() {
-  const list = document.getElementById('alarm-list');
-  list.innerHTML = ALARMS.map((a, i) => `
-    <div class="alarm-item ${a.on ? '' : 'off'}" id="alarm-${i}">
-      <div class="alarm-top">
-        <div class="alarm-label-text">${a.label}</div>
-        <div class="ios-toggle ${a.on ? 'on' : ''}" onclick="toggleAlarm(${i})"></div>
-      </div>
-      <div class="alarm-time-row">
-        <div class="alarm-time">${a.time}</div>
-        <div class="alarm-ampm">${a.ampm}</div>
-      </div>
-      <div class="alarm-days">${a.days}</div>
     </div>
-  `).join('');
+
+    <div>
+
+      <div class="clock-time" id="time${i}">
+        00:00
+      </div>
+
+      <div class="day" id="day${i}">
+        Today
+      </div>
+
+    </div>
+
+  </div>
+
+  `).join("");
+
 }
 
-function toggleAlarm(i) {
-  ALARMS[i].on = !ALARMS[i].on;
-  const item = document.getElementById(`alarm-${i}`);
-  const toggle = item.querySelector('.ios-toggle');
-  toggle.classList.toggle('on', ALARMS[i].on);
-  item.classList.toggle('off', !ALARMS[i].on);
+function offset(tz){
+
+  const now = new Date();
+
+  const local = new Date(
+    now.toLocaleString("en-US",{timeZone:tz})
+  );
+
+  const diff = (
+    local - now
+  ) / 3600000;
+
+  return `${diff >= 0 ? "+" : ""}${Math.round(diff)}HRS`;
+
 }
 
-/* ═══════════════════════════════════════════════
-   STOPWATCH
-═══════════════════════════════════════════════ */
-let swRunning = false;
-let swStartTime = 0;
-let swElapsed = 0;
-let swRAF = null;
-let swLaps = [];
-let swLapStart = 0;
+function updateClocks(){
 
-function swFormat(ms) {
-  const totalS = Math.floor(ms / 1000);
-  const min = Math.floor(totalS / 60).toString().padStart(2, '0');
-  const sec = (totalS % 60).toString().padStart(2, '0');
-  const centi = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
-  return { min, sec, centi };
-}
+  cities.forEach((c,i)=>{
 
-function swUpdateDisplay() {
-  const now = swRunning ? swElapsed + (performance.now() - swStartTime) : swElapsed;
-  const { min, sec, centi } = swFormat(now);
-  const timeEl = document.getElementById('sw-time');
-  timeEl.childNodes[0].textContent = min;
-  timeEl.childNodes[2].textContent = sec;
-  document.getElementById('sw-ms').textContent = '.' + centi;
+    const now = new Date();
 
-  if (swRunning) swRAF = requestAnimationFrame(swUpdateDisplay);
-}
+    const parts = new Intl.DateTimeFormat(
+      "en-US",
+      {
+        timeZone:c.tz,
+        hour:"2-digit",
+        minute:"2-digit",
+        second:"2-digit",
+        hour12:true
+      }
+    ).formatToParts(now);
 
-function swToggle() {
-  const btn = document.getElementById('sw-start');
-  const lapBtn = document.getElementById('sw-lap');
-  if (!swRunning) {
-    swRunning = true;
-    swStartTime = performance.now();
-    if (swLapStart === 0) swLapStart = performance.now();
-    btn.textContent = 'Stop';
-    btn.classList.add('running');
-    lapBtn.textContent = 'Lap';
-    lapBtn.style.opacity = '1';
-    swUpdateDisplay();
-  } else {
-    swRunning = false;
-    swElapsed += performance.now() - swStartTime;
-    cancelAnimationFrame(swRAF);
-    btn.textContent = 'Start';
-    btn.classList.remove('running');
-    lapBtn.textContent = 'Reset';
-    lapBtn.style.opacity = '1';
-    swUpdateDisplay();
-  }
-}
+    let h,m,s,a;
 
-function swLap() {
-  const lapBtn = document.getElementById('sw-lap');
-  if (!swRunning && swElapsed === 0) return;
-  if (!swRunning && swElapsed > 0) {
-    // Reset
-    swElapsed = 0; swLaps = []; swLapStart = 0;
-    document.getElementById('sw-time').childNodes[0].textContent = '00';
-    document.getElementById('sw-time').childNodes[2].textContent = '00';
-    document.getElementById('sw-ms').textContent = '.00';
-    renderLaps();
-    lapBtn.textContent = 'Lap';
-    lapBtn.style.opacity = '0.4';
-    return;
-  }
-  if (!swRunning) return;
-
-  const now = performance.now();
-  const totalNow = swElapsed + (now - swStartTime);
-  const lapMs = totalNow - (swLaps.reduce((a, l) => a + l.ms, 0));
-  swLaps.unshift({ n: swLaps.length + 1, ms: lapMs, total: totalNow });
-  renderLaps();
-}
-
-function renderLaps() {
-  const list = document.getElementById('lap-list');
-  if (swLaps.length === 0) {
-    list.innerHTML = '<div class="lap-header"><span>Lap</span><span>Time</span></div>';
-    return;
-  }
-  const times = swLaps.map(l => l.ms);
-  const minT = Math.min(...times), maxT = Math.max(...times);
-  list.innerHTML = '<div class="lap-header"><span>Lap</span><span>Time</span></div>' +
-    swLaps.map(l => {
-      const cls = l.ms === minT && swLaps.length > 1 ? 'fastest' : l.ms === maxT && swLaps.length > 1 ? 'slowest' : '';
-      const { min, sec, centi } = swFormat(l.ms);
-      return `<div class="lap-item ${cls}"><span>Lap ${l.n}</span><span>${min}:${sec}.${centi}</span></div>`;
-    }).join('');
-}
-
-/* ═══════════════════════════════════════════════
-   TIMER — PICKER WHEELS
-═══════════════════════════════════════════════ */
-let pickerVals = { hr: 0, min: 1, sec: 0 }; // defaults
-
-function buildPicker(colId, max, selected) {
-  const col = document.getElementById(colId);
-  const unit = col.dataset.unit;
-  const items = document.createElement('div');
-  items.className = 'picker-items';
-  items.id = colId + '-items';
-
-  // 2 empty pads top
-  for (let i = 0; i < 2; i++) {
-    const d = document.createElement('div');
-    d.className = 'picker-item'; d.textContent = '';
-    items.appendChild(d);
-  }
-
-  for (let i = 0; i <= max; i++) {
-    const d = document.createElement('div');
-    d.className = 'picker-item' + (i === selected ? ' selected' : '');
-    d.textContent = i.toString().padStart(2, '0');
-    items.appendChild(d);
-  }
-
-  // 2 empty pads bottom
-  for (let i = 0; i < 2; i++) {
-    const d = document.createElement('div');
-    d.className = 'picker-item'; d.textContent = '';
-    items.appendChild(d);
-  }
-
-  col.innerHTML = '';
-  col.appendChild(items);
-
-  // Set initial position
-  items.style.transform = `translateY(${-selected * 40}px)`;
-
-  // Drag logic
-  let startY = 0, startOffset = 0, curOffset = 0, isDragging = false;
-
-  function getOffset() {
-    const m = items.style.transform.match(/-?\d+\.?\d*/);
-    return m ? parseFloat(m[0]) : 0;
-  }
-
-  function snapToNearest(offset) {
-    const maxOffset = max * 40;
-    const clamped = Math.max(-maxOffset, Math.min(0, offset));
-    const idx = Math.round(-clamped / 40);
-    return -idx * 40;
-  }
-
-  function setSelected(idx) {
-    pickerVals[unit] = idx;
-    col.querySelectorAll('.picker-item').forEach((el, i) => {
-      el.classList.toggle('selected', i === idx + 2);
+    parts.forEach(p=>{
+      if(p.type==="hour")h=p.value;
+      if(p.type==="minute")m=p.value;
+      if(p.type==="second")s=p.value;
+      if(p.type==="dayPeriod")a=p.value;
     });
+
+    document.getElementById(`time${i}`).innerHTML =
+      `${h}:${m}<span class="ampm">${a}</span>`;
+
+    document.getElementById(`day${i}`).innerText =
+      new Intl.DateTimeFormat(
+        "en-US",
+        {
+          weekday:"long",
+          month:"short",
+          day:"numeric",
+          timeZone:c.tz
+        }
+      ).format(now);
+
+    const hr = (+h % 12) + (+m / 60);
+
+    document.getElementById(`h${i}`).style.transform =
+      `rotate(${hr * 30}deg)`;
+
+    document.getElementById(`m${i}`).style.transform =
+      `rotate(${(+m) * 6}deg)`;
+
+  });
+
+}
+
+buildWorld();
+updateClocks();
+
+setInterval(updateClocks,1000);
+
+/* TAB BAR */
+
+const tabs = document.querySelectorAll(".tab");
+const pages = document.getElementById("pages");
+const pill = document.getElementById("pill");
+
+tabs.forEach(tab=>{
+
+  tab.addEventListener("click",()=>{
+
+    tabs.forEach(t=>t.classList.remove("active"));
+
+    tab.classList.add("active");
+
+    const i = +tab.dataset.index;
+
+    pages.style.transform =
+      `translateX(-${i * 25}%)`;
+
+    pill.style.transform =
+      `translateX(${i * 100}%)`;
+
+  });
+
+});
+
+/* TOGGLES */
+
+document.querySelectorAll(".toggle").forEach(t=>{
+
+  t.addEventListener("click",()=>{
+
+    t.classList.toggle("active");
+
+  });
+
+});
+
+/* STOPWATCH */
+
+let running = false;
+let start = 0;
+let elapsed = 0;
+let raf;
+
+const sw = document.getElementById("sw");
+const swBtn = document.getElementById("swBtn");
+
+function format(ms){
+
+  const total = Math.floor(ms / 10);
+
+  const min =
+    String(Math.floor(total / 6000)).padStart(2,"0");
+
+  const sec =
+    String(Math.floor(total / 100) % 60).padStart(2,"0");
+
+  const centi =
+    String(total % 100).padStart(2,"0");
+
+  return `${min}:${sec}.${centi}`;
+
+}
+
+function tick(){
+
+  if(!running)return;
+
+  elapsed = performance.now() - start;
+
+  sw.innerText = format(elapsed);
+
+  raf = requestAnimationFrame(tick);
+
+}
+
+swBtn.onclick = ()=>{
+
+  running = !running;
+
+  if(running){
+
+    start = performance.now() - elapsed;
+
+    swBtn.classList.remove("green");
+    swBtn.classList.add("red");
+
+    swBtn.innerHTML = "<span>Stop</span>";
+
+    tick();
+
+  }else{
+
+    cancelAnimationFrame(raf);
+
+    swBtn.classList.remove("red");
+    swBtn.classList.add("green");
+
+    swBtn.innerHTML = "<span>Start</span>";
+
   }
 
-  col.addEventListener('touchstart', e => {
-    isDragging = true;
-    startY = e.touches[0].clientY;
-    startOffset = getOffset();
-    items.style.transition = 'none';
-  }, { passive: true });
+};
 
-  col.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    const dy = e.touches[0].clientY - startY;
-    curOffset = startOffset + dy;
-    const maxOff = max * 40;
-    curOffset = Math.max(-maxOff - 20, Math.min(20, curOffset));
-    items.style.transform = `translateY(${curOffset}px)`;
-  }, { passive: true });
+/* TOAST */
 
-  col.addEventListener('touchend', () => {
-    isDragging = false;
-    const snapped = snapToNearest(curOffset);
-    items.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    items.style.transform = `translateY(${snapped}px)`;
-    setSelected(Math.round(-snapped / 40));
-  });
+const toast = document.getElementById("toast");
 
-  // Mouse support
-  col.addEventListener('mousedown', e => {
-    isDragging = true;
-    startY = e.clientY;
-    startOffset = getOffset();
-    items.style.transition = 'none';
-  });
-  document.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    const dy = e.clientY - startY;
-    curOffset = startOffset + dy;
-    const maxOff = max * 40;
-    curOffset = Math.max(-maxOff - 20, Math.min(20, curOffset));
-    items.style.transform = `translateY(${curOffset}px)`;
-  });
-  document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    const snapped = snapToNearest(curOffset);
-    items.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    items.style.transform = `translateY(${snapped}px)`;
-    setSelected(Math.round(-snapped / 40));
-  });
+setTimeout(()=>{
 
-  // Wheel
-  col.addEventListener('wheel', e => {
-    e.preventDefault();
-    const cur = Math.round(-getOffset() / 40);
-    const next = Math.max(0, Math.min(max, cur + (e.deltaY > 0 ? 1 : -1)));
-    items.style.transition = 'transform 0.2s ease';
-    items.style.transform = `translateY(${-next * 40}px)`;
-    setSelected(next);
-  }, { passive: false });
-}
+  toast.classList.add("show");
 
-/* ═══════════════════════════════════════════════
-   TIMER — COUNTDOWN
-═══════════════════════════════════════════════ */
-let timerRunning = false;
-let timerPaused = false;
-let timerTotal = 0;
-let timerRemaining = 0;
-let timerStarted = 0;
-let timerRAF = null;
-const ARC_CIRC = 741.42;
+  setTimeout(()=>{
 
-function timerToggle() {
-  const btn = document.getElementById('timer-start');
-  const picker = document.getElementById('timer-picker');
-  const arc = document.getElementById('timer-arc-wrap');
+    toast.classList.remove("show");
 
-  if (!timerRunning && !timerPaused) {
-    // Start fresh
-    const total = pickerVals.hr * 3600 + pickerVals.min * 60 + pickerVals.sec;
-    if (total === 0) { showToast('Set a time first'); return; }
-    timerTotal = total * 1000;
-    timerRemaining = timerTotal;
-    timerRunning = true;
-    timerStarted = performance.now();
-    picker.classList.add('picker-hidden');
-    arc.style.display = 'flex';
-    btn.textContent = 'Pause';
-    btn.className = 'timer-btn timer-btn-red';
-    timerTick();
-  } else if (timerRunning && !timerPaused) {
-    // Pause
-    timerRunning = false;
-    timerPaused = true;
-    cancelAnimationFrame(timerRAF);
-    btn.textContent = 'Resume';
-    btn.className = 'timer-btn timer-btn-green';
-  } else if (timerPaused) {
-    // Resume
-    timerRunning = true;
-    timerPaused = false;
-    timerStarted = performance.now();
-    btn.textContent = 'Pause';
-    btn.className = 'timer-btn timer-btn-red';
-    timerTick();
-  }
-}
+  },2200);
 
-function timerCancel() {
-  timerRunning = false;
-  timerPaused = false;
-  cancelAnimationFrame(timerRAF);
-  timerRemaining = 0;
+},800);
 
-  const btn = document.getElementById('timer-start');
-  const picker = document.getElementById('timer-picker');
-  const arc = document.getElementById('timer-arc-wrap');
+/* PARALLAX GLASS */
 
-  btn.textContent = 'Start';
-  btn.className = 'timer-btn timer-btn-green';
-  picker.classList.remove('picker-hidden');
-  arc.style.display = 'none';
-  document.getElementById('timer-time').textContent = '00:00';
-  document.getElementById('arc-progress').style.strokeDashoffset = '0';
-}
+document.addEventListener("pointermove",e=>{
 
-function timerTick() {
-  const now = performance.now();
-  const elapsed = now - timerStarted;
-  timerRemaining = Math.max(0, timerRemaining - (now - timerStarted));
-  timerStarted = now;
+  const x = e.clientX / innerWidth;
+  const y = e.clientY / innerHeight;
 
-  const totalSec = Math.ceil(timerRemaining / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
+  document.querySelector(".tabbar").style.transform =
+    `
+      rotateY(${(x - .5) * 5}deg)
+      rotateX(${(.5 - y) * 5}deg)
+    `;
 
-  let label;
-  if (h > 0) {
-    label = `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-  } else {
-    label = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-  }
-  document.getElementById('timer-time').textContent = label;
-
-  // Arc
-  const frac = timerRemaining / timerTotal;
-  const offset = ARC_CIRC * (1 - frac);
-  document.getElementById('arc-progress').style.strokeDashoffset = offset;
-
-  if (timerRemaining <= 0) {
-    timerRunning = false;
-    showToast('⏰ Time\'s up!');
-    document.getElementById('timer-start').textContent = 'Start';
-    document.getElementById('timer-start').className = 'timer-btn timer-btn-green';
-    setTimeout(timerCancel, 2000);
-    return;
-  }
-
-  timerRAF = requestAnimationFrame(timerTick);
-}
-
-/* ═══════════════════════════════════════════════
-   TOAST
-═══════════════════════════════════════════════ */
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-/* ═══════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════ */
-buildClockList();
-buildAlarmList();
-buildPicker('picker-hr', 23, pickerVals.hr);
-buildPicker('picker-min', 59, pickerVals.min);
-buildPicker('picker-sec', 59, pickerVals.sec);
-
-// Initially hide arc, show picker
-document.getElementById('timer-arc-wrap').style.display = 'none';
-
-// Lap button initial state
-document.getElementById('sw-lap').style.opacity = '0.4';
-
-// World clock tick
-updateWorldClocks();
-setInterval(updateWorldClocks, 1000);
-
-// Nav haptic ripple on tap
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.addEventListener('click', function(e) {
-    const ripple = document.createElement('div');
-    ripple.className = 'ripple';
-    const r = 40;
-    ripple.style.width = ripple.style.height = r + 'px';
-    ripple.style.left = (e.offsetX - r/2) + 'px';
-    ripple.style.top = (e.offsetY - r/2) + 'px';
-    this.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-  });
 });
 </script>
+
 </body>
 </html>
