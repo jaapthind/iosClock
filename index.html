@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>iOS Clock Replica</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --bg:#000000;
+    --card:#111111;
+    --card2:#1b1b1b;
+    --glass:rgba(255,255,255,0.08);
+    --glass2:rgba(255,255,255,0.045);
+    --glass3:rgba(255,255,255,0.13);
+    --white:#ffffff;
+    --soft:#a2a2a7;
+    --soft2:#636366;
+    --line:rgba(255,255,255,.06);
+    --orange:#ff9f0a;
+    --green:#30d158;
+    --red:#ff453a;
+    --blue:#0a84ff;
+    --radius:34px;
+    --blur:42px;
+    --transition:cubic-bezier(.2,.8,.2,1);
+    --spring:cubic-bezier(.175,.885,.32,1.275);
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#000;
+    font-family:-apple-system,BlinkMacSystemFont,"Inter",sans-serif;
+    color:#fff;
+}
+
+body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:
+        radial-gradient(circle at top,#1b1b1b 0%,#000 55%);
+}
+
+.phone{
+    width:430px;
+    height:932px;
+    background:#000;
+    border-radius:58px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:
+        0 0 0 12px #111,
+        0 40px 120px rgba(0,0,0,.9),
+        inset 0 0 0 1px rgba(255,255,255,.04);
+}
+
+.noise{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    opacity:.055;
+    mix-blend-mode:overlay;
+    background-image:
+    radial-gradient(circle at 20% 20%,rgba(255,255,255,.8) 0 1px,transparent 1px),
+    radial-gradient(circle at 80% 40%,rgba(255,255,255,.5) 0 1px,transparent 1px),
+    radial-gradient(circle at 60% 80%,rgba(255,255,255,.5) 0 1px,transparent 1px);
+    background-size:4px 4px;
+}
+
+.dynamic-island{
+    position:absolute;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    width:132px;
+    height:36px;
+    background:#000;
+    border-radius:999px;
+    z-index:500;
+}
+
+.statusbar{
+    position:absolute;
+    top:16px;
+    left:0;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 34px;
+    font-size:15px;
+    font-weight:700;
+    z-index:400;
+}
+
+.status-icons{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.signal,
+.wifi,
+.battery{
+    display:flex;
+    align-items:flex-end;
+    gap:2px;
+}
+
+.signal span{
+    width:3px;
+    border-radius:10px;
+    background:#fff;
+}
+.signal span:nth-child(1){height:5px;opacity:.5;}
+.signal span:nth-child(2){height:8px;opacity:.7;}
+.signal span:nth-child(3){height:11px;opacity:.9;}
+.signal span:nth-child(4){height:14px;}
+
+.wifi::before{
+    content:"";
+    width:16px;
+    height:12px;
+    border:2px solid #fff;
+    border-top:none;
+    border-left:none;
+    transform:rotate(45deg);
+    border-radius:0 0 8px 0;
+}
+
+.battery{
+    width:26px;
+    height:13px;
+    border:2px solid #fff;
+    border-radius:4px;
+    position:relative;
+    padding:1px;
+}
+.battery::after{
+    content:"";
+    position:absolute;
+    right:-4px;
+    width:2px;
+    height:5px;
+    border-radius:1px;
+    background:#fff;
+}
+.battery-fill{
+    width:72%;
+    height:100%;
+    border-radius:2px;
+    background:#fff;
+}
+
+.app{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+}
+
+.pages{
+    width:400%;
+    height:100%;
+    display:flex;
+    transition:transform .85s var(--transition);
+    will-change:transform;
+}
+
+.page{
+    width:25%;
+    height:100%;
+    padding:
+        82px
+        22px
+        180px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    position:relative;
+    -webkit-overflow-scrolling:touch;
+    scroll-behavior:smooth;
+}
+
+.page::-webkit-scrollbar{
+    display:none;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:22px;
+}
+
+.header h1{
+    font-size:48px;
+    line-height:1;
+    letter-spacing:-2.8px;
+    font-weight:800;
+}
+
+.edit{
+    color:var(--orange);
+    font-size:20px;
+    font-weight:500;
+}
+
+.world-list{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.city-card{
+    position:relative;
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));
+    border-radius:30px;
+    padding:20px 24px;
+    border:1px solid rgba(255,255,255,.05);
+    overflow:hidden;
+    backdrop-filter:blur(20px);
+}
+
+.city-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+    linear-gradient(
+        135deg,
+        rgba(255,255,255,.09),
+        transparent 30%
+    );
+    opacity:.7;
+}
+
+.city-time{
+    font-size:58px;
+    font-weight:200;
+    letter-spacing:-4px;
+    line-height:1;
+}
+
+.city-name{
+    font-size:18px;
+    font-weight:600;
+    margin-top:10px;
+}
+
+.city-offset{
+    font-size:14px;
+    color:var(--soft);
+    margin-top:2px;
+}
+
+.alarm-list{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.alarm-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 0;
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.alarm-time{
+    font-size:62px;
+    line-height:1;
+    font-weight:200;
+    letter-spacing:-4px;
+}
+
+.alarm-label{
+    color:var(--soft);
+    margin-top:4px;
+    font-size:16px;
+}
+
+.toggle{
+    width:52px;
+    height:32px;
+    background:#3a3a3c;
+    border-radius:999px;
+    position:relative;
+    transition:.4s var(--spring);
+}
+
+.toggle::after{
+    content:"";
+    position:absolute;
+    width:28px;
+    height:28px;
+    background:#fff;
+    border-radius:50%;
+    top:2px;
+    left:2px;
+    transition:.4s var(--spring);
+    box-shadow:
+        0 2px 10px rgba(0,0,0,.5);
+}
+
+.toggle.active{
+    background:#34c759;
+}
+
+.toggle.active::after{
+    transform:translateX(20px);
+}
+
+.stopwatch{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    height:100%;
+}
+
+.stopwatch-time{
+    font-size:92px;
+    font-weight:200;
+    letter-spacing:-6px;
+    margin-top:70px;
+    font-variant-numeric:tabular-nums;
+}
+
+.stopwatch-ms{
+    font-size:34px;
+    opacity:.8;
+}
+
+.controls{
+    display:flex;
+    justify-content:space-between;
+    width:100%;
+    margin-top:90px;
+    padding:0 16px;
+}
+
+.circle-btn{
+    width:92px;
+    height:92px;
+    border-radius:50%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    overflow:hidden;
+    backdrop-filter:blur(20px);
+}
+
+.circle-btn::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    border:1px solid rgba(255,255,255,.06);
+}
+
+.circle-btn.dark{
+    background:#1c1c1e;
+    color:#fff;
+}
+
+.circle-btn.orange{
+    background:rgba(255,159,10,.16);
+    color:var(--orange);
+}
+
+.timer-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:30px;
+}
+
+.timer-circle{
+    width:320px;
+    height:320px;
+    border-radius:50%;
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.timer-circle svg{
+    position:absolute;
+    inset:0;
+    transform:rotate(-90deg);
+}
+
+.timer-display{
+    position:relative;
+    z-index:10;
+    text-align:center;
+}
+
+.timer-display h2{
+    font-size:78px;
+    letter-spacing:-5px;
+    font-weight:200;
+}
+
+.timer-display span{
+    color:var(--soft);
+    font-size:18px;
+}
+
+.timer-buttons{
+    display:flex;
+    justify-content:space-between;
+    width:100%;
+    margin-top:80px;
+    padding:0 22px;
+}
+
+.wheel-area{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:40px;
+}
+
+.wheel{
+    width:100px;
+    height:180px;
+    overflow:hidden;
+    position:relative;
+    mask-image:linear-gradient(to bottom,transparent,black 18%,black 82%,transparent);
+}
+
+.wheel::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:50%;
+    transform:translateY(-50%);
+    width:100%;
+    height:56px;
+    border-top:1px solid rgba(255,255,255,.09);
+    border-bottom:1px solid rgba(255,255,255,.09);
+    z-index:2;
+}
+
+.wheel-track{
+    position:absolute;
+    width:100%;
+    transition:transform .6s var(--spring);
+}
+
+.wheel-item{
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:42px;
+    font-weight:300;
+    letter-spacing:-2px;
+    color:rgba(255,255,255,.35);
+    transform-origin:center center;
+}
+
+.wheel-item.active{
+    color:#fff;
+    transform:scale(1.06);
+}
+
+.bottom-nav-wrap{
+    position:absolute;
+    left:0;
+    bottom:0;
+    width:100%;
+    height:180px;
+    pointer-events:none;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    padding-bottom:18px;
+    z-index:1000;
+}
+
+.bottom-nav{
+    width:390px;
+    height:102px;
+    border-radius:42px;
+    position:relative;
+    overflow:hidden;
+    pointer-events:auto;
+    backdrop-filter:blur(48px) saturate(180%);
+    -webkit-backdrop-filter:blur(48px) saturate(180%);
+    background:
+    linear-gradient(
+        180deg,
+        rgba(255,255,255,.18),
+        rgba(255,255,255,.08)
+    );
+    border:
+        1px solid rgba(255,255,255,.12);
+    box-shadow:
+        inset 0 1px 1px rgba(255,255,255,.12),
+        inset 0 -2px 10px rgba(255,255,255,.02),
+        0 10px 40px rgba(0,0,0,.55);
+}
+
+.bottom-nav::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,255,255,.12),
+            transparent 30%
+        );
+    pointer-events:none;
+}
+
+.bottom-nav::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    opacity:.03;
+    background-image:
+    radial-gradient(circle at 20% 20%,#fff 0 1px,transparent 1px),
+    radial-gradient(circle at 80% 60%,#fff 0 1px,transparent 1px);
+    background-size:3px 3px;
+}
+
+.nav-items{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+    padding:0 12px;
+}
+
+.nav-item{
+    width:78px;
+    height:78px;
+    border-radius:28px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    position:relative;
+    transition:
+        transform .5s var(--spring),
+        color .35s ease,
+        background .5s ease;
+    color:#8e8e93;
+}
+
+.nav-item.active{
+    color:var(--orange);
+    transform:translateY(-4px) scale(1.04);
+}
+
+.nav-item.active::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:26px;
+    background:
+    radial-gradient(circle at top,rgba(255,255,255,.18),transparent 60%),
+    rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.nav-icon{
+    width:28px;
+    height:28px;
+    position:relative;
+}
+
+.nav-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.2px;
+}
+
+.clock-icon,
+.alarm-icon,
+.stopwatch-icon,
+.timer-icon{
+    position:relative;
+}
+
+.clock-icon::before{
+    content:"";
+    position:absolute;
+    inset:2px;
+    border:2px solid currentColor;
+    border-radius:50%;
+}
+
+.clock-icon::after{
+    content:"";
+    position:absolute;
+    width:2px;
+    height:10px;
+    background:currentColor;
+    left:13px;
+    top:6px;
+    border-radius:2px;
+    box-shadow:5px 5px 0 0 currentColor;
+}
+
+.alarm-icon::before{
+    content:"";
+    position:absolute;
+    inset:4px;
+    border:2px solid currentColor;
+    border-radius:50%;
+}
+
+.alarm-icon::after{
+    content:"";
+    position:absolute;
+    width:14px;
+    height:6px;
+    border-top:2px solid currentColor;
+    top:-1px;
+    left:7px;
+    border-radius:20px;
+}
+
+.stopwatch-icon::before{
+    content:"";
+    position:absolute;
+    inset:5px;
+    border:2px solid currentColor;
+    border-radius:50%;
+}
+
+.stopwatch-icon::after{
+    content:"";
+    position:absolute;
+    width:8px;
+    height:4px;
+    border-radius:4px;
+    background:currentColor;
+    top:1px;
+    left:10px;
+}
+
+.timer-icon::before{
+    content:"";
+    position:absolute;
+    inset:4px;
+    border:2px solid currentColor;
+    border-radius:50%;
+}
+
+.timer-icon::after{
+    content:"";
+    position:absolute;
+    width:2px;
+    height:9px;
+    background:currentColor;
+    top:8px;
+    left:13px;
+    transform-origin:bottom center;
+    transform:rotate(35deg);
+}
+
+.homebar{
+    position:absolute;
+    bottom:8px;
+    left:50%;
+    transform:translateX(-50%);
+    width:138px;
+    height:5px;
+    border-radius:999px;
+    background:#fff;
+    opacity:.85;
+    z-index:2000;
+}
+
+.fade-edge{
+    position:absolute;
+    left:0;
+    width:100%;
+    height:60px;
+    pointer-events:none;
+    z-index:50;
+}
+
+.fade-edge.top{
+    top:0;
+    background:linear-gradient(to bottom,#000,transparent);
+}
+
+.fade-edge.bottom{
+    bottom:140px;
+    background:linear-gradient(to top,#000,transparent);
+}
+</style>
+</head>
+
+<body>
+
+<div class="phone">
+
+    <div class="noise"></div>
+
+    <div class="dynamic-island"></div>
+
+    <div class="statusbar">
+        <div>9:41</div>
+
+        <div class="status-icons">
+            <div class="signal">
+                <span></span><span></span><span></span><span></span>
+            </div>
+
+            <div class="wifi"></div>
+
+            <div class="battery">
+                <div class="battery-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app">
+
+        <div class="pages" id="pages">
+
+            <!-- WORLD CLOCK -->
+
+            <section class="page">
+
+                <div class="header">
+                    <h1>World Clock</h1>
+                    <div class="edit">Edit</div>
+                </div>
+
+                <div class="world-list">
+
+                    <div class="city-card">
+                        <div class="city-time" id="tokyo">11:42</div>
+                        <div class="city-name">Tokyo</div>
+                        <div class="city-offset">Tomorrow, +16HRS</div>
+                    </div>
+
+                    <div class="city-card">
+                        <div class="city-time" id="london">18:42</div>
+                        <div class="city-name">London</div>
+                        <div class="city-offset">Today, +8HRS</div>
+                    </div>
+
+                    <div class="city-card">
+                        <div class="city-time" id="paris">19:42</div>
+                        <div class="city-name">Paris</div>
+                        <div class="city-offset">Today, +9HRS</div>
+                    </div>
+
+                    <div class="city-card">
+                        <div class="city-time" id="sydney">04:42</div>
+                        <div class="city-name">Sydney</div>
+                        <div class="city-offset">Tomorrow, +18HRS</div>
+                    </div>
+
+                    <div class="city-card">
+                        <div class="city-time" id="dubai">22:42</div>
+                        <div class="city-name">Dubai</div>
+                        <div class="city-offset">Today, +12HRS</div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ALARM -->
+
+            <section class="page">
+
+                <div class="header">
+                    <h1>Alarm</h1>
+                    <div class="edit">+</div>
+                </div>
+
+                <div class="alarm-list">
+
+                    <div class="alarm-item">
+                        <div>
+                            <div class="alarm-time">6:30</div>
+                            <div class="alarm-label">Every day</div>
+                        </div>
+                        <div class="toggle active"></div>
+                    </div>
+
+                    <div class="alarm-item">
+                        <div>
+                            <div class="alarm-time">7:45</div>
+                            <div class="alarm-label">Weekdays</div>
+                        </div>
+                        <div class="toggle active"></div>
+                    </div>
+
+                    <div class="alarm-item">
+                        <div>
+                            <div class="alarm-time">9:00</div>
+                            <div class="alarm-label">Saturday</div>
+                        </div>
+                        <div class="toggle"></div>
+                    </div>
+
+                    <div class="alarm-item">
+                        <div>
+                            <div class="alarm-time">10:15</div>
+                            <div class="alarm-label">Sunday</div>
+                        </div>
+                        <div class="toggle"></div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- STOPWATCH -->
+
+            <section class="page">
+
+                <div class="stopwatch">
+
+                    <div class="header" style="width:100%;">
+                        <h1>Stopwatch</h1>
+                        <div></div>
+                    </div>
+
+                    <div class="stopwatch-time">
+                        <span id="sw-main">00:00</span>
+                        <span class="stopwatch-ms" id="sw-ms">.00</span>
+                    </div>
+
+                    <div class="controls">
+                        <div class="circle-btn dark" id="resetBtn">
+                            Reset
+                        </div>
+
+                        <div class="circle-btn orange" id="startBtn">
+                            Start
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- TIMER -->
+
+            <section class="page">
+
+                <div class="header">
+                    <h1>Timer</h1>
+                    <div></div>
+                </div>
+
+                <div class="timer-wrap">
+
+                    <div class="timer-circle">
+
+                        <svg width="320" height="320">
+                            <circle
+                                cx="160"
+                                cy="160"
+                                r="145"
+                                stroke="rgba(255,255,255,.08)"
+                                stroke-width="14"
+                                fill="none"
+                            />
+
+                            <circle
+                                id="progressCircle"
+                                cx="160"
+                                cy="160"
+                                r="145"
+                                stroke="url(#grad)"
+                                stroke-width="14"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-dasharray="911"
+                                stroke-dashoffset="320"
+                            />
+
+                            <defs>
+                                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ff9f0a"/>
+                                    <stop offset="100%" stop-color="#ff6a00"/>
+                                </linearGradient>
+                            </defs>
+
+                        </svg>
+
+                        <div class="timer-display">
+                            <h2 id="timerText">15:00</h2>
+                            <span>Timer</span>
+                        </div>
+
+                    </div>
+
+                    <div class="wheel-area">
+
+                        <div class="wheel">
+                            <div class="wheel-track" id="hoursWheel"></div>
+                        </div>
+
+                        <div class="wheel">
+                            <div class="wheel-track" id="minsWheel"></div>
+                        </div>
+
+                        <div class="wheel">
+                            <div class="wheel-track" id="secsWheel"></div>
+                        </div>
+
+                    </div>
+
+                    <div class="timer-buttons">
+
+                        <div class="circle-btn dark" id="cancelTimer">
+                            Cancel
+                        </div>
+
+                        <div class="circle-btn orange" id="startTimer">
+                            Start
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+    <!-- NAV -->
+
+    <div class="bottom-nav-wrap">
+
+        <div class="bottom-nav">
+
+            <div class="nav-items">
+
+                <div class="nav-item active" data-index="0">
+                    <div class="nav-icon clock-icon"></div>
+                    <div class="nav-label">World Clock</div>
+                </div>
+
+                <div class="nav-item" data-index="1">
+                    <div class="nav-icon alarm-icon"></div>
+                    <div class="nav-label">Alarm</div>
+                </div>
+
+                <div class="nav-item" data-index="2">
+                    <div class="nav-icon stopwatch-icon"></div>
+                    <div class="nav-label">Stopwatch</div>
+                </div>
+
+                <div class="nav-item" data-index="3">
+                    <div class="nav-icon timer-icon"></div>
+                    <div class="nav-label">Timer</div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="homebar"></div>
+
+</div>
+
+<script>
+const pages = document.getElementById('pages');
+const navItems = document.querySelectorAll('.nav-item');
+
+let currentPage = 0;
+
+function navigate(index){
+    currentPage = index;
+    pages.style.transform = `translateX(-${index * 25}%)`;
+
+    navItems.forEach((item,i)=>{
+        item.classList.toggle('active',i===index);
+    });
+}
+
+navItems.forEach(item=>{
+    item.addEventListener('click',()=>{
+        navigate(+item.dataset.index);
+    });
+});
+
+/* WORLD CLOCK */
+
+function updateWorldClocks(){
+    const now = new Date();
+
+    function format(offset){
+        return new Intl.DateTimeFormat('en-US',{
+            hour:'2-digit',
+            minute:'2-digit',
+            hour12:false,
+            timeZone:offset
+        }).format(now);
+    }
+
+    document.getElementById('tokyo').textContent = format('Asia/Tokyo');
+    document.getElementById('london').textContent = format('Europe/London');
+    document.getElementById('paris').textContent = format('Europe/Paris');
+    document.getElementById('sydney').textContent = format('Australia/Sydney');
+    document.getElementById('dubai').textContent = format('Asia/Dubai');
+}
+
+updateWorldClocks();
+setInterval(updateWorldClocks,1000);
+
+/* TOGGLES */
+
+document.querySelectorAll('.toggle').forEach(toggle=>{
+    toggle.addEventListener('click',()=>{
+        toggle.classList.toggle('active');
+    });
+});
+
+/* STOPWATCH */
+
+let swRunning = false;
+let swStart = 0;
+let swElapsed = 0;
+let swRAF = null;
+
+const swMain = document.getElementById('sw-main');
+const swMS = document.getElementById('sw-ms');
+const startBtn = document.getElementById('startBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+function renderSW(ms){
+
+    let minutes = Math.floor(ms / 60000);
+    let seconds = Math.floor((ms % 60000)/1000);
+    let hundredths = Math.floor((ms % 1000)/10);
+
+    swMain.textContent =
+        `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+
+    swMS.textContent =
+        `.${String(hundredths).padStart(2,'0')}`;
+}
+
+function loopSW(){
+
+    if(!swRunning) return;
+
+    swElapsed = performance.now() - swStart;
+
+    renderSW(swElapsed);
+
+    swRAF = requestAnimationFrame(loopSW);
+}
+
+startBtn.addEventListener('click',()=>{
+
+    swRunning = !swRunning;
+
+    if(swRunning){
+
+        swStart = performance.now() - swElapsed;
+
+        startBtn.innerHTML = 'Stop';
+        startBtn.style.background = 'rgba(255,69,58,.16)';
+        startBtn.style.color = '#ff453a';
+
+        loopSW();
+
+    }else{
+
+        cancelAnimationFrame(swRAF);
+
+        startBtn.innerHTML = 'Start';
+        startBtn.style.background = 'rgba(255,159,10,.16)';
+        startBtn.style.color = '#ff9f0a';
+
+    }
+
+});
+
+resetBtn.addEventListener('click',()=>{
+
+    swRunning = false;
+    cancelAnimationFrame(swRAF);
+
+    swElapsed = 0;
+
+    renderSW(0);
+
+    startBtn.innerHTML = 'Start';
+    startBtn.style.background = 'rgba(255,159,10,.16)';
+    startBtn.style.color = '#ff9f0a';
+
+});
+
+/* TIMER */
+
+const hoursWheel = document.getElementById('hoursWheel');
+const minsWheel = document.getElementById('minsWheel');
+const secsWheel = document.getElementById('secsWheel');
+
+function populateWheel(el,max){
+
+    for(let i=0;i<max;i++){
+
+        const item = document.createElement('div');
+
+        item.className = 'wheel-item';
+
+        if(i===0) item.classList.add('active');
+
+        item.textContent = String(i).padStart(2,'0');
+
+        el.appendChild(item);
+    }
+}
+
+populateWheel(hoursWheel,24);
+populateWheel(minsWheel,60);
+populateWheel(secsWheel,60);
+
+let timerSeconds = 900;
+let timerRunning = false;
+let timerInterval = null;
+
+const timerText = document.getElementById('timerText');
+const progressCircle = document.getElementById('progressCircle');
+
+function renderTimer(){
+
+    let mins = Math.floor(timerSeconds / 60);
+    let secs = timerSeconds % 60;
+
+    timerText.textContent =
+        `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+
+    const circumference = 911;
+    const progress = timerSeconds / 900;
+
+    progressCircle.style.strokeDashoffset =
+        circumference - (circumference * progress);
+}
+
+renderTimer();
+
+document.getElementById('startTimer').addEventListener('click',()=>{
+
+    if(timerRunning){
+
+        timerRunning = false;
+        clearInterval(timerInterval);
+
+        document.getElementById('startTimer').innerHTML = 'Start';
+
+        return;
+    }
+
+    timerRunning = true;
+
+    document.getElementById('startTimer').innerHTML = 'Pause';
+
+    timerInterval = setInterval(()=>{
+
+        if(timerSeconds > 0){
+
+            timerSeconds--;
+
+            renderTimer();
+
+        }else{
+
+            clearInterval(timerInterval);
+
+            timerRunning = false;
+
+        }
+
+    },1000);
+
+});
+
+document.getElementById('cancelTimer').addEventListener('click',()=>{
+
+    clearInterval(timerInterval);
+
+    timerRunning = false;
+
+    timerSeconds = 900;
+
+    renderTimer();
+
+    document.getElementById('startTimer').innerHTML = 'Start';
+
+});
+
+/* WHEELS */
+
+document.querySelectorAll('.wheel').forEach(wheel=>{
+
+    let startY = 0;
+    let offset = 0;
+
+    wheel.addEventListener('touchstart',e=>{
+        startY = e.touches[0].clientY;
+    });
+
+    wheel.addEventListener('touchmove',e=>{
+
+        let delta = e.touches[0].clientY - startY;
+
+        offset += delta * .55;
+
+        startY = e.touches[0].clientY;
+
+        const track = wheel.querySelector('.wheel-track');
+
+        track.style.transform = `translateY(${offset}px)`;
+
+        const items = wheel.querySelectorAll('.wheel-item');
+
+        items.forEach(item=>item.classList.remove('active'));
+
+        let index = Math.round(Math.abs(offset)/56);
+
+        if(items[index]) items[index].classList.add('active');
+
+    });
+
+});
+
+/* PARALLAX */
+
+let touchStartX = 0;
+
+document.addEventListener('touchstart',e=>{
+    touchStartX = e.touches[0].clientX;
+});
+
+document.addEventListener('touchend',e=>{
+
+    let diff = e.changedTouches[0].clientX - touchStartX;
+
+    if(diff < -70 && currentPage < 3){
+        navigate(currentPage + 1);
+    }
+
+    if(diff > 70 && currentPage > 0){
+        navigate(currentPage - 1);
+    }
+
+});
+
+/* RUBBER BAND */
+
+document.querySelectorAll('.page').forEach(page=>{
+
+    let startY = 0;
+    let currentY = 0;
+
+    page.addEventListener('touchstart',e=>{
+        startY = e.touches[0].clientY;
+    });
+
+    page.addEventListener('touchmove',e=>{
+
+        currentY = e.touches[0].clientY;
+
+        let delta = currentY - startY;
+
+        if(page.scrollTop <= 0 && delta > 0){
+
+            page.style.transform =
+                `translateY(${delta * .18}px)`;
+
+        }
+
+    });
+
+    page.addEventListener('touchend',()=>{
+
+        page.style.transition = '.7s cubic-bezier(.2,.8,.2,1)';
+        page.style.transform = 'translateY(0px)';
+
+        setTimeout(()=>{
+            page.style.transition = '';
+        },700);
+
+    });
+
+});
+</script>
+
+</body>
+</html>
